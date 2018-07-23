@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/jinzhu/gorm"
+	"github.com/pkg/errors"
 	"github.com/qor/auth/claims"
 	"github.com/qor/qor/utils"
 )
@@ -15,18 +16,24 @@ const CurrentUser utils.ContextKey = "current_user"
 // GetCurrentUser get current user from request
 func (auth *Auth) GetCurrentUser(req *http.Request) interface{} {
 	if currentUser := req.Context().Value(CurrentUser); currentUser != nil {
+		// log.Println("DBG auth ctx shortcut:", currentUser)
 		return currentUser
 	}
 
 	claims, err := auth.SessionStorer.Get(req)
-	if err == nil {
-		context := &Context{Auth: auth, Claims: claims, Request: req}
-		if user, err := auth.UserStorer.Get(claims, context); err == nil {
-			return user
-		}
+	if err != nil {
+		// log.Println("DBG auth SessionStorer:", err)
+		return nil
 	}
 
-	return nil
+	context := &Context{Auth: auth, Claims: claims, Request: req}
+	user, err := auth.UserStorer.Get(claims, context)
+	if err != nil {
+		// log.Println("DBG auth UserStorer:", err)
+		return nil
+	}
+
+	return user
 }
 
 // GetDB get db from request
@@ -43,8 +50,8 @@ func (auth *Auth) Login(w http.ResponseWriter, req *http.Request, claimer claims
 	claims := claimer.ToClaims()
 	now := time.Now()
 	claims.LastLoginAt = &now
-
-	return auth.SessionStorer.Update(w, req, claims)
+	err := auth.SessionStorer.Update(w, req, claims)
+	return errors.Wrap(err, "auth: failed to update user")
 }
 
 // Logout sign current user out
