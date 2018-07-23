@@ -42,7 +42,7 @@ func checkAndLog(where string, req *http.Request) (func(error), logging.Interfac
 }
 
 // DefaultLoginHandler default login behaviour
-var DefaultLoginHandler = func(context *Context, authorize func(*Context) (*claims.Claims, error)) {
+func DefaultLoginHandler(context *Context, authorize func(*Context) (*claims.Claims, error)) {
 	var (
 		req         = context.Request
 		w           = context.Writer
@@ -72,7 +72,7 @@ var DefaultLoginHandler = func(context *Context, authorize func(*Context) (*clai
 }
 
 // DefaultRegisterHandler default register behaviour
-var DefaultRegisterHandler = func(context *Context, register func(*Context) (*claims.Claims, error)) {
+func DefaultRegisterHandler(context *Context, register func(*Context) (*claims.Claims, error)) {
 	var (
 		req         = context.Request
 		w           = context.Writer
@@ -99,7 +99,7 @@ var DefaultRegisterHandler = func(context *Context, register func(*Context) (*cl
 }
 
 // DefaultLogoutHandler default logout behaviour
-var DefaultLogoutHandler = func(context *Context) {
+func DefaultLogoutHandler(context *Context) {
 	// Clear auth session
 	context.SessionStorer.Delete(context.Writer, context.Request)
 	context.Auth.Redirector.Redirect(context.Writer, context.Request, "logout")
@@ -108,7 +108,7 @@ var DefaultLogoutHandler = func(context *Context) {
 var cacheSince = time.Now().Format(http.TimeFormat)
 
 // DefaultAssetHandler render auth asset file
-var DefaultAssetHandler = func(context *Context) {
+func DefaultAssetHandler(context *Context) {
 	asset := strings.TrimPrefix(context.Request.URL.Path, context.Auth.URLPrefix)
 
 	if context.Request.Header.Get("If-Modified-Since") == cacheSince {
