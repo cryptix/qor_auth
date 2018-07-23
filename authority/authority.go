@@ -1,6 +1,7 @@
 package authority
 
 import (
+	"context"
 	"html/template"
 	"net/http"
 
@@ -65,7 +66,8 @@ func (authority *Authority) Authorize(roles ...string) func(http.Handler) http.H
 			currentUser = authority.Auth.GetCurrentUser(req)
 
 			if (len(roles) == 0 && currentUser != nil) || authority.Role.HasRole(req, currentUser, roles...) {
-				handler.ServeHTTP(w, req)
+				ctx := context.WithValue(req.Context(), auth.CurrentUser, currentUser)
+				handler.ServeHTTP(w, req.WithContext(ctx))
 				return
 			}
 
