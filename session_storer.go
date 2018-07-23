@@ -1,11 +1,10 @@
 package auth
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/pkg/errors"
 	"github.com/qor/auth/claims"
 	"github.com/qor/session"
 )
@@ -70,8 +69,10 @@ func (sessionStorer *SessionStorer) Flashes(w http.ResponseWriter, req *http.Req
 // SignedToken generate signed token with Claims
 func (sessionStorer *SessionStorer) SignedToken(claims *claims.Claims) string {
 	token := jwt.NewWithClaims(sessionStorer.SigningMethod, claims)
-	signedToken, _ := token.SignedString([]byte(sessionStorer.SignedString))
-
+	signedToken, err := token.SignedString([]byte(sessionStorer.SignedString))
+	if err != nil {
+		panic(errors.Wrap(err, "failed to sign token"))
+	}
 	return signedToken
 }
 
@@ -79,7 +80,7 @@ func (sessionStorer *SessionStorer) SignedToken(claims *claims.Claims) string {
 func (sessionStorer *SessionStorer) ValidateClaims(tokenString string) (*claims.Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &claims.Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if token.Method != sessionStorer.SigningMethod {
-			return nil, fmt.Errorf("unexpected signing method")
+			return nil, errors.Errorf("unexpected signing method")
 		}
 		return []byte(sessionStorer.SignedString), nil
 	})
