@@ -40,13 +40,8 @@ type SessionStorer struct {
 
 // Get get claims from request
 func (sessionStorer *SessionStorer) Get(req *http.Request) (*claims.Claims, error) {
-	tokenString := req.Header.Get("Authorization")
-
-	// Get Token from Cookie
-	if tokenString == "" {
-		tokenString = sessionStorer.SessionManager.Get(req, sessionStorer.SessionName)
-	}
-
+	// NOTE: removed Authorization header handling which handles oauth2
+	tokenString := sessionStorer.SessionManager.Get(req, sessionStorer.SessionName)
 	return sessionStorer.ValidateClaims(tokenString)
 }
 
